@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+vars:
+  PORT: 8080
+  ENV: development
+  STAG: staging
+  PROD: production
+  
+tasks:
+  run:
+    cmds:
+      - go run ./cmd/api
+    desc: Run the API server in the default environment
+
+  run-dev:
+    cmds:
+      - go run ./cmd/api -port={{.PORT}} -env={{.ENV}}
+    desc: Run the API server in development environment
+
+  run-prod:
+    cmds:
+      - go run -ldflags="-s -w" ./cmd/api -port={{.PORT}} -env={{.PROD}}
+    desc: Run the API server in production environment
+
+  run-stag:
+    cmds:
+      - go run ./cmd/api -port={{.PORT}} -env={{.STAG}}
+    desc: Run the API server in staging environment
+
+  build:
+    cmds:
+      - go build -o bin/api ./cmd/api
+    desc: Build the API server binary
+
+  fmt:
+    cmds:
+      - go fmt ./...
+    desc: Format the code
+
+  test:
+    cmds:
+      - go test -v ./...
+    desc: Run all tests
