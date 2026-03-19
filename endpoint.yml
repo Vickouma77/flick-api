@@ -1,0 +1,82 @@
+openapi: 3.0.0
+info:
+  title: Flick API
+  description: API for managing a library of movies.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000/v1
+    description: Local development server
+
+paths:
+  /healthcheck:
+    get:
+      summary: Show application information
+      responses:
+        "200":
+          description: OK
+
+  /movies:
+    get:
+      summary: Show the details of all movies
+      responses:
+        "200":
+          description: A list of movies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Movie"
+    post:
+      summary: Create a new movie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Movie"
+      responses:
+        "201":
+          description: Created
+
+  /movies/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Show the details of a specific movie
+      responses:
+        "200":
+          description: Movie details
+    put:
+      summary: Update the details of a specific movie
+      responses:
+        "200":
+          description: Movie updated
+    delete:
+      summary: Delete a specific movie
+      responses:
+        "204":
+          description: Movie deleted
+
+components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        year:
+          type: integer
+        runtime:
+          type: string
+        genres:
+          type: array
+          items:
+            type: string

@@ -1,24 +1,27 @@
 # flick-api
 
+`flick-api` is a Go-based API service.
+
+## Directory Layout
+
+```text
 .
-├── bin
-├── cmd
-│
-└── api
-│   └── main.go
-|
-├── internal
-|
-├── migrations
-|
-├── remote
-|
+├── bin/
+├── cmd/
+│   └── api/
+│       └── main.go
+├── internal/
+├── migrations/
+├── remote/
 ├── go.mod
 └── Makefile
+```
 
-**bin**: Contains compiled application binaries for deployment purposes.
-**cmd/api**: Contains application specific code, i.e running server, reading and writing HTTP requests etc
-**internal**: Contains packages used by the API that are not intended to be used by external applications.
-**migrations**: SQL migration files for the database.
-**remote**: Contains configuration files and scripts for production servers
-**Makefile**: Contains files for automating common administrative tasks i.e auditing Go code, running tests, building the application, etc.
+## Directory and File Descriptions
+
+- **bin/**: Contains compiled application binaries for deployment purposes.
+- **cmd/api/**: Contains application-specific entrypoint and server code (for example, starting the server and handling HTTP requests and responses).
+- **internal/**: Contains packages used by the API that are not intended for external use.
+- **migrations/**: Contains SQL migration files for the database.
+- **remote/**: Contains configuration files and scripts for production servers.
+- **Makefile**: Contains commands for automating common tasks such as code auditing, testing, and building the application.
