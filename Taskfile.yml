@@ -20,7 +20,7 @@ tasks:
 
   run-prod:
     cmds:
-      - go run -ldflags="-s -w" ./cmd/api -port={{.PORT}} -env={{.PROD}}
+      - go run ./cmd/api -port={{.PORT}} -env={{.PROD}}
     desc: Run the API server in production environment
 
   run-stag:
