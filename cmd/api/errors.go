@@ -17,6 +17,10 @@ func (a *application) logError(r *http.Request, err error) {
 
 // errorResponse writes a standardized JSON error payload with the given status code.
 func (a *application) errorResponse(w http.ResponseWriter, r *http.Request, status int, message any) {
+	if err, ok := message.(error); ok {
+		message = err.Error()
+	}
+
 	env := envelope{"error": message}
 
 	err := a.writeJSON(w, status, env, nil)
@@ -47,4 +51,8 @@ func (a *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.Re
 	message := fmt.Sprintf("the %s method is not supported for this resource", r.Method)
 
 	a.errorResponse(w, r, http.StatusMethodNotAllowed, message)
+}
+
+func (a *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
+	a.errorResponse(w, r, http.StatusBadRequest, err.Error())
 }
