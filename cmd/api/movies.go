@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
+
+	"flick.io/internal/data"
 )
 
 func (a *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
@@ -16,5 +19,17 @@ func (a *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "show the details of a movie %d\n", id)
+	movie := data.Movie{
+		ID:        id,
+		CreatedAt: time.Now(),
+		Title:     "Casablanca",
+		Runtime:   102,
+		Genre:     []string{"drama", "romance", "war"},
+		Version:   1,
+	}
+
+	err = a.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
+	if err != nil {
+		a.serverError(w, r, err)
+	}
 }
