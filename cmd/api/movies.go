@@ -6,19 +6,34 @@ import (
 	"time"
 
 	"flick.io/internal/data"
+	"flick.io/internal/validator"
 )
 
 func (a *application) createMovieHandler(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title   string   `json:"title"`
-		Year    int32    `json:"year"`
-		Runtime data.Runtime   `json:"runtime"`
-		Genres  []string `json:"genres"`
+		Title   string       `json:"title"`
+		Year    int32        `json:"year"`
+		Runtime data.Runtime `json:"runtime"`
+		Genres  []string     `json:"genres"`
 	}
 
 	err := a.readJSON(w, r, &input)
 	if err != nil {
 		a.badRequestResponse(w, r, err)
+		return
+	}
+
+	movie := &data.Movie{
+		Title:   input.Title,
+		Year:    input.Year,
+		Runtime: input.Runtime,
+		Genres:  input.Genres,
+	}
+
+	v := validator.New()
+
+	if data.ValidateMovie(v, movie); !v.Valid() {
+		a.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
@@ -37,7 +52,7 @@ func (a *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: time.Now(),
 		Title:     "Casablanca",
 		Runtime:   102,
-		Genre:     []string{"drama", "romance", "war"},
+		Genres:    []string{"drama", "romance", "war"},
 		Version:   1,
 	}
 

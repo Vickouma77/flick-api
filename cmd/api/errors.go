@@ -53,6 +53,12 @@ func (a *application) methodNotAllowedResponse(w http.ResponseWriter, r *http.Re
 	a.errorResponse(w, r, http.StatusMethodNotAllowed, message)
 }
 
+// badRequestResponse returns a 400 Bad Request response with the provided error message.
 func (a *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
 	a.errorResponse(w, r, http.StatusBadRequest, err.Error())
+}
+
+// failedValidationResponse returns a 422 Unprocessable Entity response containing validation errors.
+func (a *application) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
+	a.errorResponse(w, r, http.StatusUnprocessableEntity, errors)
 }
