@@ -10,12 +10,12 @@ vars:
 tasks:
   run:
     cmds:
-      - go run ./cmd/api
+      - go run ./cmd/api -db-dsn=$FLICK_DB_DSN
     desc: Run the API server in the default environment
 
   run-dev:
     cmds:
-      - go run ./cmd/api -port={{.PORT}} -env={{.ENV}}
+      - go run ./cmd/api -port={{.PORT}} -env={{.ENV}} -db-dsn=$FLICK_DB_DSN
     desc: Run the API server in development environment
 
   run-prod:
