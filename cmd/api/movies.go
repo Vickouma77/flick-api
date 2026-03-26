@@ -75,3 +75,59 @@ func (a *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 		a.serverError(w, r, err)
 	}
 }
+
+func (a *application) updateMovieHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := a.readIDParam(r)
+	if err != nil {
+		a.notFoundResponse(w, r)
+		return
+	}
+
+	movie, err := a.models.Movies.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			a.notFoundResponse(w, r)
+		default:
+			a.serverError(w, r, err)
+		}
+		return
+	}
+
+	// Holds expected data from client
+	var input struct {
+		Title   string       `json:"title"`
+		Year    int32        `json:"year"`
+		Runtime data.Runtime `json:"runtime"`
+		Genre   []string     `json:"genres"`
+	}
+
+	err = a.readJSON(w, r, &input)
+	if err != nil {
+		a.badRequestResponse(w, r, err)
+		return
+	}
+
+	movie.Title = input.Title
+	movie.Year = input.Year
+	movie.Runtime = input.Runtime
+	movie.Genres = input.Genre
+
+	v := validator.New()
+
+	if data.ValidateMovie(v, movie); !v.Valid() {
+		a.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = a.models.Movies.Update(movie)
+	if err != nil {
+		a.serverError(w, r, err)
+		return
+	}
+
+	err = a.writeJSON(w, http.StatusOK, envelope{"movie": movie}, nil)
+	if err != nil {
+		a.serverError(w, r, err)
+	}
+}

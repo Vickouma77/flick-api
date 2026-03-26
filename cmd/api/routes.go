@@ -18,6 +18,7 @@ func (a *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", a.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/movies", a.createMovieHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/movies/:id", a.showMovieHandler)
+	router.HandlerFunc(http.MethodPut, "/v1/movies/:id", a.updateMovieHandler)
 
 	return a.recoverPanic(router)
 }
