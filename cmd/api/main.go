@@ -61,8 +61,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	db.Close()
-
 	logger.Info("database connection pool established")
 
 	// An instance of the application struct
