@@ -145,6 +145,33 @@ func (a *application) updateMovieHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+func (a *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Title    string
+		Genres   []string
+		Page     int
+		PageSize int
+		sort     string
+	}
+
+	v := validator.New()
+
+	qs := r.URL.Query()
+
+	input.Title = a.readString(qs, "title", "")
+	input.Genres = a.readCSV(qs, "genres", []string{})
+	input.Page = a.readInt(qs, "page", 1, v)
+	input.PageSize = a.readInt(qs, "page_string", 20, v)
+	input.sort = a.readString(qs, "sort", "id")
+
+	if !v.Valid() {
+		a.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
+}
+
 func (a *application) deleteMovieHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := a.readIDParam(r)
 	if err != nil {

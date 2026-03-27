@@ -7,8 +7,11 @@ import (
 	"io"
 	"maps"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
+
+	"flick.io/internal/validator"
 
 	"github.com/julienschmidt/httprouter"
 )
@@ -96,4 +99,48 @@ func (a *application) readJSON(w http.ResponseWriter, r *http.Request, dest any)
 	}
 
 	return nil
+}
+
+// readString returns the query-string value for key, or defaultValue if the
+// parameter is missing or empty.
+func (a *application) readString(qs url.Values, key, defaultValue string) string {
+	// Extracting the value of a given key
+	s := qs.Get(key)
+
+	if s == "" {
+		return defaultValue
+	}
+
+	return s
+}
+
+// readCSV returns a comma-separated query-string value as a slice. If the
+// parameter is missing or empty, it returns defaultValue.
+func (a *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
+	csv := qs.Get(key)
+
+	if csv == "" {
+		return defaultValue
+	}
+
+	return strings.Split(csv, ",")
+}
+
+// readInt parses an integer query-string value. If the parameter is missing,
+// empty, or invalid, it records a validation error (for invalid values) and
+// returns defaultValue.
+func (a *application) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
+	s := qs.Get(key)
+
+	if s == "" {
+		return defaultValue
+	}
+
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		v.AddError(key, "must be an integer value")
+		return defaultValue
+	}
+
+	return i
 }
