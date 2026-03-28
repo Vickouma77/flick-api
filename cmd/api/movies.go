@@ -176,9 +176,11 @@ func (a *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) 
 	// by the client (which will imply an ascending sort on movie ID).
 	input.Filters.Sort = a.readString(qs, "sort", "id")
 
+	input.Filters.SortSafeList = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
+
 	// Check the Validator instance for any errors and use the failedValidationResponse()
 	// helper to send the client a response if necessary.
-	if !v.Valid() {
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
 		a.failedValidationResponse(w, r, v.Errors)
 		return
 	}
