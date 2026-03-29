@@ -185,8 +185,17 @@ func (a *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Dump the contents of the input struct in a HTTP response.
-	fmt.Fprintf(w, "%+v\n", input)
+	movies, err := a.models.Movies.GetAll(input.Title, input.Genres, input.Filters)
+	if err != nil {
+		a.serverError(w, r, err)
+		return
+	}
+
+	err = a.writeJSON(w, http.StatusOK, envelope{"movies": movies}, nil)
+	if err != nil {
+		a.serverError(w, r, err)
+		return
+	}
 }
 
 func (a *application) deleteMovieHandler(w http.ResponseWriter, r *http.Request) {
