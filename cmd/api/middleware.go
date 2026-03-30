@@ -60,34 +60,35 @@ func (a *application) rateLimit(next http.Handler) http.Handler {
 	}()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Parse remote address and use only the IP as the per-client key.
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			a.serverError(w, r, err)
-			return
-		}
+		if a.config.limiter.enabled {
+			// Parse remote address and use only the IP as the per-client key.
+			ip, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				a.serverError(w, r, err)
+				return
+			}
 
-		// Lock while accessing the shared clients map.
-		mu.Lock()
+			// Lock while accessing the shared clients map.
+			mu.Lock()
 
-		// First request from this IP: create a limiter with 2 requests/second and
-		// a burst capacity of 4.
-		if _, found := clients[ip]; !found {
-			clients[ip] = &client{limiter: rate.NewLimiter(2, 4)}
-		}
+			// First request from this IP: create a limiter from runtime config.
+			if _, found := clients[ip]; !found {
+				clients[ip] = &client{limiter: rate.NewLimiter(rate.Limit(a.config.limiter.rps), a.config.limiter.burst)}
+			}
 
-		// Update activity timestamp for stale-entry eviction.
-		clients[ip].lastSeen = time.Now()
+			// Update activity timestamp for stale-entry eviction.
+			clients[ip].lastSeen = time.Now()
 
-		// Allow consumes one token if available; otherwise reject with 429.
-		if !clients[ip].limiter.Allow() {
+			// Allow consumes one token if available; otherwise reject with 429.
+			if !clients[ip].limiter.Allow() {
+				mu.Unlock()
+				a.rateLimitExceededResponse(w, r)
+				return
+			}
+
+			// Unlock before calling next to avoid serializing downstream handlers.
 			mu.Unlock()
-			a.rateLimitExceededResponse(w, r)
-			return
 		}
-
-		// Unlock before calling next to avoid serializing downstream handlers.
-		mu.Unlock()
 
 		next.ServeHTTP(w, r)
 	})
