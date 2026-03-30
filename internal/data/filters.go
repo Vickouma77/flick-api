@@ -1,6 +1,9 @@
 package data
 
 import (
+	"slices"
+	"strings"
+
 	"flick.io/internal/validator"
 )
 
@@ -9,6 +12,21 @@ type Filters struct {
 	PageSize     int
 	Sort         string
 	SortSafeList []string
+}
+
+func (f Filters) sortColumns() string {
+	if slices.Contains(f.SortSafeList, f.Sort) {
+		return strings.TrimPrefix(f.Sort, "-")
+	}
+
+	panic("unsafe sort parameter: " + f.Sort)
+}
+
+func (f Filters) sortDirection() string {
+	if strings.HasPrefix(f.Sort, "-") {
+		return "DESC"
+	}
+	return "ASC"
 }
 
 func ValidateFilters(v *validator.Validator, f Filters) {
