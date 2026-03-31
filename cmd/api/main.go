@@ -66,7 +66,7 @@ func main() {
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limit")
 
 	flag.StringVar(&cfg.smtp.host, "smtp-host", "sandbox.smtp.mailtrap.io", "SMTP host")
-	flag.IntVar(&cfg.smtp.port, "smtp-port", 25, "SMTP port")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", 2525, "SMTP port")
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "b1eab700644fbd", "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "1cd8fe51bdb714", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Flick <no-reply@flick.io>", "SMTP sender")
