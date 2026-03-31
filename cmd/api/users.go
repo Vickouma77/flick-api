@@ -52,6 +52,15 @@ func (a *application) registerUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Send the welcome email in the background so SMTP issues don't block signup.
+	userCopy := *user
+	go func() {
+		err := a.mailer.Send(userCopy.Email, "user_welcome.tmpl.html", userCopy)
+		if err != nil {
+			a.logger.Error(err.Error(), "recipient", userCopy.Email)
+		}
+	}()
+
 	err = a.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)
 	if err != nil {
 		a.serverError(w, r, err)
