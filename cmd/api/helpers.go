@@ -146,7 +146,14 @@ func (a *application) readInt(qs url.Values, key string, defaultValue int, v *va
 }
 
 func (a *application) background(fn func()) {
+	// Incrementing waitGroup counter
+	a.wg.Add(1)
+
+	// Background goroutine
 	go func() {
+		// Use defer to decrement the WaitGroup counter before the goroutine returns.
+		defer a.wg.Done()
+
 		defer func() {
 			if err := recover(); err != nil {
 				a.logger.Error(fmt.Sprintf("%v", err))
