@@ -144,3 +144,15 @@ func (a *application) readInt(qs url.Values, key string, defaultValue int, v *va
 
 	return i
 }
+
+func (a *application) background(fn func()) {
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				a.logger.Error(fmt.Sprintf("%v", err))
+			}
+		}()
+
+		fn()
+	}()
+}

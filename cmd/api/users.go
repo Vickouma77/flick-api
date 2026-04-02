@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"flick.io/internal/data"
@@ -55,18 +54,12 @@ func (a *application) registerUserHandler(w http.ResponseWriter, r *http.Request
 
 	// Send the welcome email in the background so SMTP issues don't block signup.
 	// userCopy := *user
-	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				a.logger.Error(fmt.Sprintf("%v", err))
-			}
-		}()
-
-		err := a.mailer.Send(user.Email, "user_welcome.tmpl.html", user)
+	a.background(func() {
+		err = a.mailer.Send(user.Email, "user_welcome.tmpl.html", user)
 		if err != nil {
 			a.logger.Error(err.Error())
 		}
-	}()
+	})
 
 	err = a.writeJSON(w, http.StatusAccepted, envelope{"user": user}, nil)
 	if err != nil {
