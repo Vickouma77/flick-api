@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"flick.io/internal/data"
 	"flick.io/internal/validator"
@@ -52,10 +53,21 @@ func (a *application) registerUserHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	token, err := a.models.Token.New(int64(user.ID), 3*24*time.Hour, data.ScopeActivation)
+	if err != nil {
+		a.serverError(w, r, err)
+		return
+	}
+
 	// Send the welcome email in the background so SMTP issues don't block signup.
 	// userCopy := *user
 	a.background(func() {
-		err = a.mailer.Send(user.Email, "user_welcome.tmpl.html", user)
+		data := map[string]any{
+			"activationToken": token.PlainText,
+			"userID": user.ID,
+		}
+
+		err = a.mailer.Send(user.Email, "user_welcome.tmpl.html", data)
 		if err != nil {
 			a.logger.Error(err.Error())
 		}
