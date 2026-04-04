@@ -17,6 +17,8 @@ var (
 	ErrDuplicateEmail = errors.New("duplicate email")
 )
 
+var AnonymousUser = &User{}
+
 // User represents an individual user in the system.
 type User struct {
 	ID        int       `json:"id"`
@@ -223,4 +225,8 @@ func (m *UserModel) GetForToken(tokenCope, tokenPlaintext string) (*User, error)
 		}
 	}
 	return &user, nil
+}
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
