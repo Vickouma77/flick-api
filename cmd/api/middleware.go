@@ -147,7 +147,7 @@ func (a *application) requireAuthenticatedUser(next http.HandlerFunc) http.Handl
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := a.contextGetUser(r)
 
-		if !user.IsAnonymous() {
+		if user.IsAnonymous() {
 			a.authenticationRequiredResponse(w, r)
 			return
 		}
@@ -169,4 +169,24 @@ func (a *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFu
 	})
 
 	return a.requireAuthenticatedUser(fn)
+}
+
+func (a *application) requirePermission(code string, next http.HandlerFunc) http.HandlerFunc {
+	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := a.contextGetUser(r)
+
+		permissions, err := a.models.Permissions.GetAllForUSer(int64(user.ID))
+		if err != nil {
+			a.serverError(w, r, err)
+			return
+		}
+
+		if !permissions.Include(code) {
+			a.notPermittedResponse(w, r)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+
+	return a.requireActivatedUser(fn)
 }
