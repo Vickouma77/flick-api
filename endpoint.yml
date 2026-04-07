@@ -14,31 +14,79 @@ paths:
       summary: Show application information
       responses:
         "200":
-          description: OK
-
-  /movies:
-    get:
-      summary: Show the details of all movies
-      responses:
-        "200":
-          description: A list of movies
+          description: Application status
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Movie"
+                $ref: "#/components/schemas/HealthcheckResponse"
+
+  /movies:
+    get:
+      summary: List movies
+      parameters:
+        - name: title
+          in: query
+          description: Filter movies by title search term.
+          schema:
+            type: string
+        - name: genres
+          in: query
+          description: Filter movies by one or more genres.
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: id
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: A paginated list of movies
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MovieListResponse"
     post:
       summary: Create a new movie
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Movie"
+              $ref: "#/components/schemas/MovieCreateRequest"
       responses:
         "201":
-          description: Created
+          description: Movie created
+          headers:
+            Location:
+              description: URL of the newly created movie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  movie:
+                    $ref: "#/components/schemas/Movie"
 
   /movies/{id}:
     parameters:
@@ -47,36 +95,299 @@ paths:
         required: true
         schema:
           type: integer
+          format: int64
     get:
       summary: Show the details of a specific movie
+      security:
+        - bearerAuth: []
       responses:
         "200":
           description: Movie details
-    put:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  movie:
+                    $ref: "#/components/schemas/Movie"
+    patch:
       summary: Update the details of a specific movie
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MovieUpdateRequest"
       responses:
         "200":
           description: Movie updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  movie:
+                    $ref: "#/components/schemas/Movie"
     delete:
       summary: Delete a specific movie
+      security:
+        - bearerAuth: []
       responses:
-        "204":
+        "200":
           description: Movie deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /users:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegisterRequest"
+      responses:
+        "202":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /users/activated:
+    put:
+      summary: Activate a user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserActivationRequest"
+      responses:
+        "200":
+          description: User activated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+
+  /tokens/authentication:
+    post:
+      summary: Create an authentication token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthenticationTokenRequest"
+      responses:
+        "201":
+          description: Authentication token created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authentication_token:
+                    $ref: "#/components/schemas/AuthenticationToken"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
   schemas:
+    HealthcheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        system_info:
+          type: object
+          properties:
+            environment:
+              type: string
+            version:
+              type: string
+          required:
+            - environment
+            - version
+      required:
+        - status
+        - system_info
+
     Movie:
       type: object
       properties:
         id:
           type: integer
+          format: int64
         title:
           type: string
         year:
           type: integer
+          format: int32
         runtime:
           type: string
+          example: "123 mins"
+        genre:
+          type: array
+          items:
+            type: string
+        version:
+          type: integer
+          format: int32
+      required:
+        - id
+        - title
+        - year
+        - runtime
+        - genre
+        - version
+
+    MovieCreateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        year:
+          type: integer
+          format: int32
+        runtime:
+          type: string
+          example: "123 mins"
         genres:
           type: array
           items:
             type: string
+      required:
+        - title
+        - year
+        - runtime
+        - genres
+
+    MovieUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        year:
+          type: integer
+          format: int32
+        runtime:
+          type: string
+          example: "123 mins"
+        genres:
+          type: array
+          items:
+            type: string
+
+    MovieListResponse:
+      type: object
+      properties:
+        movies:
+          type: array
+          items:
+            $ref: "#/components/schemas/Movie"
+        metadata:
+          $ref: "#/components/schemas/Metadata"
+      required:
+        - movies
+        - metadata
+
+    Metadata:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        page_size:
+          type: integer
+        first_page:
+          type: integer
+        last_page:
+          type: integer
+        total_records:
+          type: integer
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        activated:
+          type: boolean
+      required:
+        - id
+        - created_at
+        - name
+        - email
+        - activated
+
+    UserRegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - name
+        - email
+        - password
+
+    UserActivationRequest:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+
+    AuthenticationTokenRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    AuthenticationToken:
+      type: object
+      properties:
+        token:
+          type: string
+        expiry:
+          type: string
+          format: date-time
+      required:
+        - token
+        - expiry
