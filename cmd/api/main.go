@@ -6,6 +6,7 @@ import (
 	"flag"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -40,6 +41,9 @@ type config struct {
 		password string
 		sender   string
 	}
+	cors struct {
+		trustedOrigins []string
+	}
 }
 
 // Dependencies for the HTTP handlers, helpers and middlewares.
@@ -72,6 +76,11 @@ func main() {
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "b1eab700644fbd", "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "1cd8fe51bdb714", "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "Flick <no-reply@flick.io>", "SMTP sender")
+
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
+		cfg.cors.trustedOrigins = strings.Fields(val)
+		return nil
+	})
 
 	flag.Parse()
 
