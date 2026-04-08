@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -16,6 +17,12 @@ import (
 
 	"golang.org/x/time/rate"
 )
+
+type metricResponseWriter struct {
+	wrapped       http.ResponseWriter
+	statusCode    int
+	headerWritten bool
+}
 
 func (a *application) recoverPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -219,11 +226,41 @@ func (a *application) enableCORS(next http.Handler) http.Handler {
 	})
 }
 
+func newMetricResponseWriter(w http.ResponseWriter) *metricResponseWriter {
+	return &metricResponseWriter{
+		wrapped:    w,
+		statusCode: http.StatusOK,
+	}
+}
+
+func (mw *metricResponseWriter) Header() http.Header {
+	return mw.wrapped.Header()
+}
+
+func (mw *metricResponseWriter) WriteHeader(statusCode int) {
+	mw.wrapped.WriteHeader(statusCode)
+
+	if !mw.headerWritten {
+		mw.statusCode = statusCode
+		mw.headerWritten = true
+	}
+}
+
+func (mw *metricResponseWriter) Write(b []byte) (int, error) {
+	mw.headerWritten = true
+	return mw.wrapped.Write(b)
+}
+
+func (mw *metricResponseWriter) Unwrap() http.ResponseWriter {
+	return mw.wrapped
+}
+
 func (a *application) metrics(next http.Handler) http.Handler {
 	var (
-		totalRequestReceived = expvar.NewInt("total_requests_received")
-		totalResponsesSent = expvar.NewInt("total_responses_sent")
+		totalRequestReceived            = expvar.NewInt("total_requests_received")
+		totalResponsesSent              = expvar.NewInt("total_responses_sent")
 		totalProcessingTimeMicroseconds = expvar.NewInt("total_processing_time_μs")
+		totalResponsesSentByStatus      = expvar.NewMap("total_responses_sent_by_status")
 	)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -231,9 +268,13 @@ func (a *application) metrics(next http.Handler) http.Handler {
 
 		totalRequestReceived.Add(1)
 
-		next.ServeHTTP(w, r)
+		mw := newMetricResponseWriter(w)
+
+		next.ServeHTTP(mw, r)
 
 		totalResponsesSent.Add(1)
+
+		totalResponsesSentByStatus.Add(strconv.Itoa(mw.statusCode), 1)
 
 		duration := time.Since(start).Microseconds()
 		totalProcessingTimeMicroseconds.Add(duration)
