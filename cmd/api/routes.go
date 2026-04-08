@@ -31,5 +31,5 @@ func (a *application) routes() http.Handler {
 
 	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
-	return a.recoverPanic(a.enableCORS(a.rateLimit(a.authenticate(router))))
+	return a.metrics(a.recoverPanic(a.enableCORS(a.rateLimit(a.authenticate(router)))))
 }
