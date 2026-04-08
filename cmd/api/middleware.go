@@ -209,7 +209,7 @@ func (a *application) enableCORS(next http.Handler) http.Handler {
 					w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 
 					w.WriteHeader(http.StatusOK)
-					return 
+					return
 				}
 			}
 		}

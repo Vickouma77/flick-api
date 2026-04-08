@@ -1,6 +1,7 @@
 package main
 
 import (
+	"expvar"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -27,6 +28,8 @@ func (a *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPut, "/v1/users/activated", a.activateUserHandler)
 
 	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", a.createAuthenticationTokenHandler)
+
+	router.Handler(http.MethodGet, "/debug/vars", expvar.Handler())
 
 	return a.recoverPanic(a.enableCORS(a.rateLimit(a.authenticate(router))))
 }
