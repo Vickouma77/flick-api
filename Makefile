@@ -1,3 +1,5 @@
+include .envrc
+
 .PHONY: help confirm run/api db/migrations/create db/migrations/up db/migrations/down db/migrations/version force
 
 # Help message
@@ -11,7 +13,7 @@ confirm:
 ## run/api: run the cmd/api application
 run/api:
 	@echo "Starting the application..."
-	@go run ./cmd/api
+	@go run ./cmd/api -db-dsn=$(FLICK_DB_DSN)
 
 ## db/migrations/create name=$1: create a new database migration
 db/migrations/create:
