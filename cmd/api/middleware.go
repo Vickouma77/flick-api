@@ -4,7 +4,6 @@ import (
 	"errors"
 	"expvar"
 	"fmt"
-	"net"
 	"net/http"
 	"slices"
 	"strconv"
@@ -15,6 +14,7 @@ import (
 	"flick.io/internal/data"
 	"flick.io/internal/validator"
 
+	"github.com/tomasen/realip"
 	"golang.org/x/time/rate"
 )
 
@@ -75,12 +75,8 @@ func (a *application) rateLimit(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if a.config.limiter.enabled {
-			// Parse remote address and use only the IP as the per-client key.
-			ip, _, err := net.SplitHostPort(r.RemoteAddr)
-			if err != nil {
-				a.serverError(w, r, err)
-				return
-			}
+
+			ip := realip.FromRequest(r)
 
 			// Lock while accessing the shared clients map.
 			mu.Lock()
