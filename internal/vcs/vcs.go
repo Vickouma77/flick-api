@@ -19,7 +19,7 @@ func Version() string {
 			case "vcs.revision":
 				revision = s.Value
 			case "vcs.modified":
-				modified = true
+				modified = s.Value == "true"
 			}
 		}
 	}
