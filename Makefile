@@ -1,6 +1,6 @@
 include .envrc
 
-.PHONY: help confirm run/api db/migrations/create db/migrations/up db/migrations/down db/migrations/version force
+.PHONY: help confirm build/api run/api db/migrations/create db/migrations/up db/migrations/down db/migrations/version force
 
 # ==================================================================================== #
 # HELPERS
@@ -17,6 +17,12 @@ confirm:
 # ==================================================================================== #
 # DEVELOPMENT
 # ==================================================================================== #
+
+## build/api: build the cmd/api application
+build/api:
+	@echo "Building the application..."
+	@go build -ldflags='-s' -o=./bin/api ./cmd/api
+	GOOS=linux GOARCH=amd64 go build -ldflags='-s' -o=./bin/linux_amd64/api ./cmd/api
 
 ## run/api: run the cmd/api application
 run/api:

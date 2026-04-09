@@ -4,5 +4,6 @@ HELP.md
 .vscode/
 
 vendor/
+bin/
 
 .envrc
