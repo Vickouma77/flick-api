@@ -15,12 +15,17 @@ import (
 
 	"flick.io/internal/data"
 	"flick.io/internal/mailer"
+	"flick.io/internal/vcs"
 
 	_ "github.com/lib/pq"
 )
 
 // TODO: Refactor later
-const version = "1.0.0"
+// const version = "1.0.0" // Refactor done.
+
+var (
+	version = vcs.Version()
+)
 
 // Configuration settings
 type config struct {
