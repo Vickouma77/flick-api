@@ -12,8 +12,10 @@ func Version() string {
 		modified bool
 	)
 
+	// Read build metadata when it is embedded by the Go toolchain.
 	bi, ok := debug.ReadBuildInfo()
 	if ok {
+		// Pull out the commit hash and dirty flag recorded at build time.
 		for _, s := range bi.Settings {
 			switch s.Key {
 			case "vcs.revision":
@@ -24,6 +26,7 @@ func Version() string {
 		}
 	}
 
+	// Mark locally modified builds so the reported version matches the binary.
 	if modified {
 		return fmt.Sprintf("%s-dirty", revision)
 	}
