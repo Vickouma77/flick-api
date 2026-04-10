@@ -17,6 +17,7 @@ var (
 	ErrDuplicateEmail = errors.New("duplicate email")
 )
 
+// AnonymousUser is a sentinel used to distinguish unauthenticated requests from real users.
 var AnonymousUser = &User{}
 
 // User represents an individual user in the system.
@@ -39,6 +40,7 @@ type password struct {
 	hash      []byte
 }
 
+// UserModel wraps the database operations for user records.
 type UserModel struct {
 	DB *sql.DB
 }
@@ -86,6 +88,7 @@ func ValidatePasswordPlaintext(v *validator.Validator, password string) {
 	v.Check(len(password) <= 72, "password", "must not be more than 72 bytes long")
 }
 
+// ValidateUser enforces the required profile fields and ensures a password hash exists before persistence.
 func ValidateUser(v *validator.Validator, user *User) {
 	v.Check(user.Name != "", "name", "must be provided")
 	v.Check(len(user.Name) <= 500, "name", "must not be more than 500 bytes long")
@@ -101,6 +104,7 @@ func ValidateUser(v *validator.Validator, user *User) {
 	}
 }
 
+// Insert persists a new user and maps duplicate-email errors to a package-level sentinel.
 func (m *UserModel) Insert(user *User) error {
 	query := `
 		INSERT INTO users (name, email, password_hash, activated)
@@ -125,6 +129,7 @@ func (m *UserModel) Insert(user *User) error {
 	return nil
 }
 
+// GetByEmail loads the full user record so authentication can compare passwords.
 func (m *UserModel) GetByEmail(email string) (*User, error) {
 	query := `
 		SELECT id, created_at, name, email, password_hash, activated, version
@@ -157,6 +162,7 @@ func (m *UserModel) GetByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
+// Update uses optimistic concurrency by matching the current version in the WHERE clause.
 func (m *UserModel) Update(user *User) error {
 	query := `
 		UPDATE users
@@ -190,6 +196,7 @@ func (m *UserModel) Update(user *User) error {
 	return nil
 }
 
+// GetForToken resolves a user from a token hash while enforcing scope and expiry.
 func (m *UserModel) GetForToken(tokenCope, tokenPlaintext string) (*User, error) {
 	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
 	query := `
@@ -227,6 +234,7 @@ func (m *UserModel) GetForToken(tokenCope, tokenPlaintext string) (*User, error)
 	return &user, nil
 }
 
+// IsAnonymous reports whether the receiver is the shared unauthenticated sentinel.
 func (u *User) IsAnonymous() bool {
 	return u == AnonymousUser
 }
