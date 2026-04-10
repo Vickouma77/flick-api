@@ -23,6 +23,7 @@ func (r Runtime) MarshalJSON() ([]byte, error) {
 }
 
 func (r *Runtime) UnmarshalJSON(jsonValue []byte) error {
+	// Accept only the exact "<number> mins" format so invalid payloads fail fast.
 	unquotedJSONValue, err := strconv.Unquote(string(jsonValue))
 	if err != nil {
 		return ErrInvalidRuntimeFormat
